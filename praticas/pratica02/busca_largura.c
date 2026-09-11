@@ -1,31 +1,102 @@
 #include <stdlib.h>
 #include "busca_largura.h"
 
-int *busca_em_largura(GrafoLista *g, int inicio) {
-    if (!g || inicio < 0 || inicio >= g->n) return NULL;
+Fila *criar_fila(int capacidade)
+{
+    if (capacidade <= 0) return NULL;
 
-    int *dist = malloc(g->n * sizeof(int));
-    int *fila = malloc(g->n * sizeof(int));
-    if (!dist || !fila) return NULL;
+    Fila *fila = malloc(sizeof(Fila));
+    if (fila == NULL) return NULL;
 
-    for (int i = 0; i < g->n; i++) dist[i] = -1;
+    fila->dados = malloc(capacidade * sizeof(int));
+    if (fila->dados == NULL) {
+        free(fila);
+        return NULL;
+    }
 
-    int inicio_f = 0, fim_f = 0;
+    fila->capacidade = capacidade;
+    fila->inicio = 0;
+    fila->fim = 0;
+    fila->tamanho = 0;
 
-    dist[inicio] = 0;
-    fila[fim_f++] = inicio;
+    return fila;
+}
 
-    while (inicio_f < fim_f) {
-        int u = fila[inicio_f++];
+int enfileirar(Fila *fila, int valor)
+{
+    if (fila == NULL || fila->tamanho == fila->capacidade)
+        return 0;
+
+    fila->dados[fila->fim] = valor;
+    fila->fim = (fila->fim + 1) % fila->capacidade;
+    fila->tamanho++;
+
+    return 1;
+}
+
+int desenfileirar(Fila *fila, int *valor)
+{
+    if (fila == NULL || valor == NULL || fila->tamanho == 0)
+        return 0;
+
+    *valor = fila->dados[fila->inicio];
+    fila->inicio = (fila->inicio + 1) % fila->capacidade;
+    fila->tamanho--;
+
+    return 1;
+}
+
+int fila_vazia(Fila *fila)
+{
+    if (fila == NULL)
+        return 1;
+
+    return fila->tamanho == 0;
+}
+
+void liberar_fila(Fila *fila)
+{
+    if (fila == NULL)
+        return;
+
+    free(fila->dados);
+    free(fila);
+}
+
+void bfs(GrafoLista *g, int origem, int *dist, int *pred)
+{
+    if (g == NULL || dist == NULL || pred == NULL)
+        return;
+
+    if (origem < 0 || origem >= g->n)
+        return;
+
+    for (int i = 0; i < g->n; i++) {
+        dist[i] = -1;
+        pred[i] = -1;
+    }
+
+    Fila *fila = criar_fila(g->n);
+    if (fila == NULL)
+        return;
+
+    dist[origem] = 0;
+    enfileirar(fila, origem);
+
+    while (!fila_vazia(fila)) {
+        int u;
+        desenfileirar(fila, &u);
+
         for (No *p = g->adj[u]; p != NULL; p = p->prox) {
             int v = p->destino;
+
             if (dist[v] == -1) {
                 dist[v] = dist[u] + 1;
-                fila[fim_f++] = v;
+                pred[v] = u;
+                enfileirar(fila, v);
             }
         }
     }
 
-    free(fila);
-    return dist;
+    liberar_fila(fila);
 }
