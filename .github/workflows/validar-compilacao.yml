@@ -75,4 +75,14 @@ jobs:
           echo "========================================"
           
           if [ $ERROS -gt 0 ]; then
-            echo "❌ Corrija os erros
+            echo "❌ Corrija os erros acima e faça um novo commit/push."
+            exit 1
+          fi
+          
+          if [ $SUCESSOS -eq 0 ]; then
+            echo "⚠️ Nenhum arquivo .c foi compilado."
+            echo "   Verifique se você criou os arquivos na PASTA correta."
+            exit 1
+          fi
+          
+          echo "✅ Todos os arquivos compilaram
